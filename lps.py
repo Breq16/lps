@@ -58,8 +58,9 @@ def applyTransform(source_point, matrix):
     return dest_point
 
 def matchColor(color):
-    colors = {"green": (128, 42, 211),
-              "red": (128, 208, 195)}
+    colors = {"green": (182, 76, 196),
+              "red": (164, 187, 151),
+              "blue": (124, 146, 76)}
 
 
     minDist = (np.inf, None)
@@ -111,10 +112,6 @@ class Marker:
                 boundary_points_square.append(tuple(int(coord) for coord in picture_point))
             boundary_points.append(boundary_points_square)
 
-        #for points in boundary_points:
-        #    for point in points:
-        #        cv2.circle(image, tuple(int(coord) for coord in point), 10, (255, 0, 255))
-
         # Now, we can generate masks for each of the four squares.
 
         for i in range(4):
@@ -132,12 +129,21 @@ class Marker:
 
         # Use the information gathered from the squares to interpret the type of this marker
 
-        if self.squares.count("red") == 1 and self.squares.count("green") == 3:
+        if self.squares.count("red") == 1:
             self.type = "target"
             first_corner_index = self.squares.index("red")
-        elif self.squares.count("red") == 3 and self.squares.count("green") == 1:
+        elif self.squares.count("red") == 2:
+            self.type = "label"
+            if self.squares[0] == "red" and self.squares[3] == "red":
+                first_corner_index = 3
+            else:
+                first_corner_index = self.squares.index("red")
+        elif self.squares.count("red") == 3:
             self.type = "reference"
-            first_corner_index = self.squares.index("green")
+            for i, square in enumerate(self.squares):
+                if square != "red":
+                    first_corner_index = i
+                    break
         else:
             self.type = "none"
             first_corner_index = 0
@@ -148,11 +154,49 @@ class Marker:
         # Now that we have the orientation, recalculate the transform matrices
         self.pictureToScene, self.sceneToPicture = self.getTransformMatrices()
 
+        more_squares = (self.type == "label")
+        row = 0
+
+        self.aux_squares = []
+
+        while more_squares:
+            boundary_points_scene = [((-1+col, -2-row), (-2+col, -2-row), (-2+col, -3-row), (-1+col, -3-row)) for col in range(4)]
+
+            boundary_points = []
+            for square in boundary_points_scene:
+                boundary_points_square = []
+                for scene_point in square:
+                    picture_point = applyTransform(scene_point, self.sceneToPicture)
+                    boundary_points_square.append(tuple(int(coord) for coord in picture_point))
+                boundary_points.append(boundary_points_square)
+
+            coord_masks = [np.zeros((image.shape[0], image.shape[1], 1), np.uint8) for coord in self.coords]
+
+            for i in range(4):
+                points_array = np.array(boundary_points[i])
+                cv2.fillPoly(coord_masks[i], [points_array], 255)
+
+            row_squares = []
+
+            for i in range(4):
+                mean = cv2.mean(image_lab, coord_masks[i])
+                row_squares.append(matchColor(mean))
+
+            self.aux_squares.append(row_squares)
+            more_squares = (row_squares[0] == "green")
+
+
     def getPicturePos(self):
         return applyTransform((0, 0), self.sceneToPicture)
 
+    def getPictureFront(self):
+        return applyTransform((0, 2), self.sceneToPicture)
+
     def getGlobalPos(self, pictureToScene):
         return applyTransform(self.getPicturePos(), pictureToScene)
+
+    def getGlobalFront(self, pictureToScene):
+        return applyTransform(self.getPictureFront(), pictureToScene)
 
     def display(self, image):
         if self.type == "reference":
@@ -162,16 +206,20 @@ class Marker:
             cv2.circle(image, tuple(int(coord) for coord in self.getPicturePos()), 10, (255, 0, 255), 2)
             # Draw X/Y axes
             cv2.arrowedLine(image, tuple(int(coord) for coord in self.getPicturePos()),
-                            tuple(int(coord) for coord in applyTransform((1, 0), self.sceneToPicture)),
+                            tuple(int(coord) for coord in applyTransform((3, 0), self.sceneToPicture)),
                             (0, 0, 255), 2)
             cv2.arrowedLine(image, tuple(int(coord) for coord in self.getPicturePos()),
-                            tuple(int(coord) for coord in applyTransform((0, 1), self.sceneToPicture)),
+                            tuple(int(coord) for coord in applyTransform((0, 3), self.sceneToPicture)),
                             (0, 255, 0), 2)
-        elif self.type == "target":
+        elif self.type == "target" or self.type == "label":
             # Draw border
             cv2.polylines(image, [self.coords], True, (0, 255, 255), 2)
             # Draw center
             cv2.circle(image, tuple(int(coord) for coord in self.getPicturePos()), 10, (0, 255, 255), 2)
+            # Draw orientation
+            cv2.arrowedLine(image, tuple(int(coord) for coord in self.getPicturePos()),
+                            tuple(int(coord) for coord in self.getPictureFront()),
+                            (255, 0, 0), 2)
         else:
             # Draw border
             cv2.polylines(image, [self.coords], True, (0, 0, 255), 2)
@@ -182,7 +230,7 @@ class Marker:
 def findMarkers(image):
     image_blur = cv2.GaussianBlur(image, (15, 15), 0)
 
-    cv2.imshow("Blur", image_blur)
+    # cv2.imshow("Blur", image_blur)
     image_hsv = cv2.cvtColor(image_blur, cv2.COLOR_BGR2HSV)
 
     mask = cv2.inRange(image_hsv, BLUE_MIN, BLUE_MAX)
@@ -208,9 +256,27 @@ def findMarkers(image):
         if len(approx) != 4:
             continue
 
-        # cv2.circle(image, tuple(*approx[0]), 10, (0, 0, 255), 2)
+        distances = []
 
-        markers.append(Marker(approx))
+        for i in range(len(approx)):
+            point = approx[i]
+            next = approx[(i+1) % 4]
+            dist = scipy.spatial.distance.euclidean(point, next)
+            distances.append(dist)
+
+        maxDist = 0
+        for dist in distances:
+            if dist > maxDist:
+                maxDist = dist
+
+        for dist in distances:
+            # Make sure polygons have reasonable dimensions
+            if dist < 0.5*maxDist:
+                break
+        else:
+            # cv2.circle(image, tuple(*approx[0]), 10, (0, 0, 255), 2)
+
+            markers.append(Marker(approx))
 
     return markers
 
@@ -250,7 +316,7 @@ while True:
             global_pos = "NO REF"
 
         marker.display(image)
-        cv2.putText(image, f"{global_pos}", tuple(int(coord) for coord in picture_pos), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255, 0), 3)
+        cv2.putText(image, f"{global_pos}:{marker.squares}", tuple(int(coord) for coord in picture_pos), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255, 0), 3)
 
     cv2.imshow("Frame", image)
 
