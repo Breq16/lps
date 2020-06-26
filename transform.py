@@ -2,6 +2,12 @@ import numpy as np
 
 
 def get_matrices(corners, size):
+    """Get the transformation matrices given an object's size in the scene
+    and the positions of its corners in the picture.
+
+    (As these are projective transformations,
+    these matrices use homogenous coordinates.)"""
+
     def map_basis_to_points(points):
         homo_points = [np.array([[point[0]], [point[1]], [1]])
                        for point in points]
@@ -32,6 +38,9 @@ def get_matrices(corners, size):
 
 
 def apply(source_point, matrix):
+    """Apply a transformation matrix for homogenous coordinates
+    to a point in Cartesian coordinates."""
+
     homo_source_point = np.array([[coord] for coord in source_point] + [[1]])
     homo_dest_point = np.matmul(matrix, homo_source_point)
     dest_point = (homo_dest_point[0][0] / homo_dest_point[2][0],

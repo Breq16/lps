@@ -6,6 +6,7 @@ import transform
 
 
 def match_color(color):
+    "Determine if a color is closer to green or red."
     colors = {"green": (182, 76, 196),
               "red": (164, 187, 151)}
 
@@ -22,15 +23,24 @@ def match_color(color):
 
 
 class Marker:
-    def __init__(self, coords):
-        self.coords = coords
+    "Representation of a single tracking marker."
+
+    def __init__(self, corners):
+        "Initialize a Marker with corners at the given positions."
+        self.corners = corners
         self.squares = None
 
     def calc_transform(self):
+        """Calculate the transformation matrices between the Marker's position
+        on the picture and its position in the scene."""
+
         self.pic_to_scene, self.scene_to_pic = transform.get_matrices(
-            [coord[0] for coord in self.coords], 4)
+            self.corners, 4)
 
     def scan_square(self, image_lab, pos):
+        """Identify the color of a square at the given position relative to the
+        origin of the marker."""
+
         boundary_points = (
             (pos[0], pos[1]),
             (pos[0]-1, pos[1]),
@@ -50,6 +60,7 @@ class Marker:
         return match_color(mean_color)
 
     def scan(self, image):
+        "Scan the Marker's squares to determine its orientation and type."
         self.calc_transform()
 
         image_lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
@@ -91,14 +102,15 @@ class Marker:
             self.type = "none"
             first_corner_index = 0
 
-        self.coords = np.concatenate((self.coords[first_corner_index:],
-                                      self.coords[:first_corner_index]))
+        self.corners = (self.corners[first_corner_index:]
+                        + self.corners[:first_corner_index])
         self.squares = (self.squares[first_corner_index:]
                         + self.squares[:first_corner_index])
 
         # Now that we have the orientation, recalculate the transform matrices
         self.calc_transform()
 
+        # Read any auxillary squares present
         more_squares = (self.type == "label")
         row = 0
 
@@ -114,6 +126,9 @@ class Marker:
             more_squares = (row_squares[0] == "green")
 
     def pic_pos(self, pos=(0, 0), return_float=False):
+        """Map a position in the scene to its position in the picture
+        (using this marker as the reference)."""
+
         pos = transform.apply(pos, self.scene_to_pic)
         if return_float:
             return pos
@@ -121,6 +136,9 @@ class Marker:
             return tuple(int(coord) for coord in pos)
 
     def scene_pos(self, pos=(0, 0), return_float=True):
+        """Map a position in the picture to its position in the scene
+        (using this marker as the reference)."""
+
         pos = transform.apply(pos, self.pic_to_scene)
         if return_float:
             return pos
@@ -128,13 +146,20 @@ class Marker:
             return tuple(int(coord) for coord in pos)
 
     def scene_pos_marker(self, marker, return_float=True):
+        """Get the position of another marker in the scene
+        (using this marker as the reference)."""
+
         pos = marker.pic_pos((0, 0), True)
         return self.scene_pos(pos, return_float)
 
     def display(self, image):
+        "Draw information about this marker on the image."
+
+        polylines_arr = np.array([self.corners])
+
         if self.type == "reference":
             # Draw border
-            cv2.polylines(image, [self.coords], True, (255, 0, 255), 2)
+            cv2.polylines(image, polylines_arr, True, (255, 0, 255), 2)
             # Draw center
             cv2.circle(image, self.pic_pos(), 10, (255, 0, 255), 2)
             # Draw X/Y axes
@@ -146,7 +171,7 @@ class Marker:
                             (0, 255, 0), 2)
         elif self.type == "target" or self.type == "label":
             # Draw border
-            cv2.polylines(image, [self.coords], True, (0, 255, 255), 2)
+            cv2.polylines(image, polylines_arr, True, (0, 255, 255), 2)
             # Draw center
             cv2.circle(image, self.pic_pos(), 10, (0, 255, 255), 2)
             # Draw orientation
@@ -155,6 +180,6 @@ class Marker:
                             (255, 0, 0), 2)
         else:
             # Draw border
-            cv2.polylines(image, [self.coords], True, (0, 0, 255), 2)
+            cv2.polylines(image, polylines_arr, True, (0, 0, 255), 2)
             # Draw center
             cv2.circle(image, self.pic_pos(), 10, (0, 0, 255), 2)

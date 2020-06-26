@@ -10,9 +10,9 @@ BLUE_MAX = np.array([130, 255, 255])
 
 
 def scan(image):
+    "Scan an image for markers."
     image_blur = cv2.GaussianBlur(image, (15, 15), 0)
 
-    # cv2.imshow("Blur", image_blur)
     image_hsv = cv2.cvtColor(image_blur, cv2.COLOR_BGR2HSV)
 
     mask = cv2.inRange(image_hsv, BLUE_MIN, BLUE_MAX)
@@ -55,6 +55,8 @@ def scan(image):
         else:
             # cv2.circle(image, tuple(*approx[0]), 10, (0, 0, 255), 2)
 
-            markers.append(marker.Marker(approx))
+            markers.append(marker.Marker(
+                [[int(coord) for coord in column[0]]
+                 for column in approx]))
 
     return markers
