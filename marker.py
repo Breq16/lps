@@ -29,7 +29,6 @@ class Marker:
         "Initialize a Marker with corners at the given positions."
         self.corners = corners
         self.squares = None
-        self.global_pos = None
 
     def calc_transform(self):
         """Calculate the transformation matrices between the Marker's position
@@ -130,12 +129,21 @@ class Marker:
             if row >= 4:  # sanity check
                 break
 
-        self.aux_data = []
+        aux_data = []
         for aux_row in self.aux_squares:
             for aux_square in aux_row[1:]:
-                self.aux_data.append("1" if aux_square == "red" else "0")
+                aux_data.append(aux_square == "red")
 
-        self.aux_data = "".join(self.aux_data)
+        if len(self.aux_squares) == 0:
+            self.num = -1
+        elif len(self.aux_squares) == 1:
+            self.num = 0
+        else:
+            self.num = 8**(len(self.aux_squares) - 1)
+
+        for i, bit in enumerate(aux_data):
+            if bit:
+                self.num += 2**i
 
     def pic_pos(self, pos=(0, 0), return_float=False):
         """Map a position in the scene to its position in the picture
@@ -165,13 +173,15 @@ class Marker:
         return self.scene_pos(pos, return_float)
 
     def use_reference(self, reference=None):
-        """Calculate the position of this Marker using another Marker as a
-        reference."""
+        """Set this marker's reference for global position calculation."""
+        self.reference = reference
 
-        if reference is not None:
-            self.global_pos = reference.scene_pos_marker(self, False)
+    def global_pos(self, return_float=True):
+        "Calculate the global position of this marker using its reference."
+        if self.reference is not None:
+            return self.reference.scene_pos_marker(self, return_float)
         else:
-            self.global_pos = None
+            return None
 
     def display(self, image):
         "Draw information about this marker on the image."
@@ -202,11 +212,12 @@ class Marker:
                             self.pic_pos((0, 2)),
                             (255, 0, 0), 2)
             # Draw position
-            if self.global_pos is not None:
-                text.append(f"{self.global_pos}")
+            global_pos = self.global_pos(False)
+            if global_pos is not None:
+                text.append(f"{global_pos}")
 
-            if self.type == "label":
-                text.append(self.aux_data)
+            if self.num >= 0:
+                text.append(str(self.num))
         else:
             # Draw border
             cv2.polylines(image, polylines_arr, True, (0, 0, 255), 2)
