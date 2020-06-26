@@ -223,6 +223,9 @@ class Marker:
             cv2.polylines(image, polylines_arr, True, (0, 0, 255), 2)
             # Draw center
             cv2.circle(image, self.pic_pos(), 10, (0, 0, 255), 2)
+            # Draw squares
+            text.append("".join("R" if square == "red" else "G"
+                                for square in self.squares))
 
         text = ":".join(text)
         cv2.putText(image, text, self.pic_pos(),
