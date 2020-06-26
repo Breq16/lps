@@ -20,14 +20,9 @@ while True:
             break
 
     for marker in markers:
-        if reference is not None:
-            global_pos = reference.scene_pos_marker(marker, False)
-        else:
-            global_pos = "NO REF"
+        marker.use_reference(reference)
 
         marker.display(image)
-        cv2.putText(image, f"{global_pos}:{marker.squares}", marker.pic_pos(),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255, 0), 3)
 
     cv2.imshow("Frame", image)
 
