@@ -165,21 +165,21 @@ class Marker:
         else:
             return tuple(int(coord) for coord in pos)
 
-    def scene_pos_marker(self, marker, return_float=True):
+    def scene_pos_marker(self, marker, pos=(0, 0), return_float=True):
         """Get the position of another marker in the scene
         (using this marker as the reference)."""
 
-        pos = marker.pic_pos((0, 0), True)
+        pos = marker.pic_pos(pos, True)
         return self.scene_pos(pos, return_float)
 
     def use_reference(self, reference=None):
         """Set this marker's reference for global position calculation."""
         self.reference = reference
 
-    def global_pos(self, return_float=True):
+    def global_pos(self, pos=(0, 0), return_float=True):
         "Calculate the global position of this marker using its reference."
         if self.reference is not None:
-            return self.reference.scene_pos_marker(self, return_float)
+            return self.reference.scene_pos_marker(self, pos, return_float)
         else:
             return None
 
@@ -212,7 +212,7 @@ class Marker:
                             self.pic_pos((0, 2)),
                             (255, 0, 0), 2)
             # Draw position
-            global_pos = self.global_pos(False)
+            global_pos = self.global_pos(return_float=False)
             if global_pos is not None:
                 text.append(f"{global_pos}")
 
