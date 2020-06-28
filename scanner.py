@@ -41,10 +41,10 @@ def scan(image):
 
         length = cv2.arcLength(contour, True)
 
-        if length < 50:
+        if length < 30:
             continue
 
-        epsilon = 0.03*length
+        epsilon = 0.05*length
         approx = cv2.approxPolyDP(contour, epsilon, True)
 
         if len(approx) != 4:

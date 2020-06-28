@@ -5,6 +5,7 @@ import scanner
 import plot
 import gui
 import server
+import smooth
 
 cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FPS, 15)
@@ -39,6 +40,7 @@ while True:
         marker.use_reference(reference)
         marker.display(image_marker_view)
         plot.plot(marker)
+        smooth.register(marker)
         state.append({
             "type": marker.type,
             "pos": marker.global_pos((0, 0)),
@@ -80,6 +82,9 @@ while True:
         cv2.putText(image_lab_sq0, reference.squares[0], (10, 100),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0, 0), 3)
     gui.show(image_lab_sq0, "camera_lab_sq0")
+
+    smooth.prune()
+    gui.show(smooth.render(), "smooth_plot")
 
     gui.update()
 

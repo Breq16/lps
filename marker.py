@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import cv2
 import scipy.spatial.distance
@@ -29,6 +31,7 @@ class Marker:
         "Initialize a Marker with corners at the given positions."
         self.corners = corners
         self.squares = None
+        self.timestamp = time.time()
 
     def calc_transform(self):
         """Calculate the transformation matrices between the Marker's position
