@@ -138,8 +138,12 @@ class Marker:
             self.num = -1
         elif len(self.aux_squares) == 1:
             self.num = 0
+        elif len(self.aux_squares) == 2:
+            self.num = 8
+        elif len(self.aux_squares) == 3:
+            self.num = 40
         else:
-            self.num = 8**(len(self.aux_squares) - 1)
+            self.num = 552
 
         for i, bit in enumerate(aux_data):
             if bit:
