@@ -79,7 +79,7 @@ while True:
     cv2.rectangle(image_lab_sq0, (80, 200), (130, 250), (164, 187, 151), -1)
 
     if reference is not None:
-        cv2.putText(image_lab_sq0, reference.squares[0], (10, 100),
+        cv2.putText(image_lab_sq0, str(reference.squares[0]), (10, 100),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0, 0), 3)
     gui.show(image_lab_sq0, "camera_lab_sq0")
 

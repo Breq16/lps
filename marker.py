@@ -2,26 +2,13 @@ import time
 
 import numpy as np
 import cv2
-import scipy.spatial.distance
 
 import transform
 
 
 def match_color(color):
-    "Determine if a color is closer to green or red."
-    colors = {"green": (182, 76, 196),
-              "red": (164, 187, 151)}
-
-    min_dist = np.inf
-    match = None
-
-    for (name, ref_color) in colors.items():
-        d = scipy.spatial.distance.euclidean(ref_color, color[:3])
-        if d < min_dist:
-            min_dist = d
-            match = name
-
-    return match
+    "Determine if a color is black (1) or white (0)."
+    return color[0] < 160
 
 
 class Marker:
@@ -86,19 +73,19 @@ class Marker:
         # Use the information gathered from the squares to interpret the type
         # of this marker
 
-        if self.squares.count("red") == 1:
+        if self.squares.count(1) == 1:
             self.type = "target"
-            first_corner_index = self.squares.index("red")
-        elif self.squares.count("red") == 2:
+            first_corner_index = self.squares.index(1)
+        elif self.squares.count(1) == 2:
             self.type = "label"
             if self.squares[0] == "red" and self.squares[3] == "red":
                 first_corner_index = 3
             else:
-                first_corner_index = self.squares.index("red")
-        elif self.squares.count("red") == 3:
+                first_corner_index = self.squares.index(1)
+        elif self.squares.count(1) == 3:
             self.type = "reference"
             for i, square in enumerate(self.squares):
-                if square != "red":
+                if square != 1:
                     first_corner_index = i
                     break
         else:
@@ -126,7 +113,7 @@ class Marker:
                                for pos in aux_square_positions)
 
             self.aux_squares.append(row_squares)
-            more_squares = (row_squares[0] == "green")
+            more_squares = (row_squares[0] == 0)
 
             row += 1
             if row >= 4:  # sanity check
@@ -135,7 +122,7 @@ class Marker:
         aux_data = []
         for aux_row in self.aux_squares:
             for aux_square in aux_row[1:]:
-                aux_data.append(aux_square == "red")
+                aux_data.append(aux_square == 1)
 
         if len(self.aux_squares) == 0:
             self.num = -1
@@ -231,7 +218,7 @@ class Marker:
             # Draw center
             cv2.circle(image, self.pic_pos(), 10, (0, 0, 255), 2)
             # Draw squares
-            text.append("".join("R" if square == "red" else "G"
+            text.append("".join("1" if square else "0"
                                 for square in self.squares))
 
         text = ":".join(text)
