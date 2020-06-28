@@ -8,17 +8,18 @@ import transform
 
 def match_color(color):
     "Determine if a color is black (1) or white (0)."
-    return color[0] < 160
+    return color[2] < 160
 
 
 class Marker:
     "Representation of a single tracking marker."
 
-    def __init__(self, corners):
+    def __init__(self, image_hsv, corners):
         "Initialize a Marker with corners at the given positions."
         self.corners = corners
         self.squares = None
         self.timestamp = time.time()
+        self.scan(image_hsv)
 
     def calc_transform(self):
         """Calculate the transformation matrices between the Marker's position
@@ -49,11 +50,13 @@ class Marker:
         mean_color = cv2.mean(image_lab, coord_mask)
         return match_color(mean_color)
 
-    def scan(self, image):
+    def scan(self, image_hsv):
         "Scan the Marker's squares to determine its orientation and type."
-        self.calc_transform()
-
-        image_lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        try:
+            self.calc_transform()
+        except np.linalg.LinAlgError:
+            self.is_valid = False
+            return
 
         # We don't know the orientation of the marker yet without reading the
         # marker squares. But in order to know the marker squares, we need to
@@ -67,7 +70,7 @@ class Marker:
 
         square_positions = ((1, 1), (0, 1), (0, 0), (1, 0))
 
-        self.squares = list(self.scan_square(image_lab, pos)
+        self.squares = list(self.scan_square(image_hsv, pos)
                             for pos in square_positions)
 
         # Use the information gathered from the squares to interpret the type
@@ -109,7 +112,7 @@ class Marker:
         while more_squares:
             aux_square_positions = tuple((-1+col, -2-row) for col in range(4))
 
-            row_squares = list(self.scan_square(image_lab, pos)
+            row_squares = list(self.scan_square(image_hsv, pos)
                                for pos in aux_square_positions)
 
             self.aux_squares.append(row_squares)
@@ -138,6 +141,8 @@ class Marker:
         for i, bit in enumerate(aux_data):
             if bit:
                 self.num += 2**i
+
+        self.is_valid = True
 
     def pic_pos(self, pos=(0, 0), return_float=False):
         """Map a position in the scene to its position in the picture

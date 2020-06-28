@@ -6,8 +6,8 @@ import imutils
 import marker
 import gui
 
-BLUE_MIN = np.array([90, 40, 20])
-BLUE_MAX = np.array([130, 255, 255])
+BLUE_MIN = np.array([90, 40, 100])
+BLUE_MAX = np.array([120, 255, 255])
 
 
 def scan(image):
@@ -41,11 +41,13 @@ def scan(image):
 
         length = cv2.arcLength(contour, True)
 
-        if length < 30:
+        if length < 20:
             continue
 
         epsilon = 0.05*length
         approx = cv2.approxPolyDP(contour, epsilon, True)
+
+        cv2.polylines(image_with_approx, [approx], True, (255, 0, 0), 2)
 
         if len(approx) != 4:
             continue
@@ -65,13 +67,14 @@ def scan(image):
 
         for dist in distances:
             # Make sure polygons have reasonable dimensions
-            if dist < 0.5*maxDist:
+            if dist < 0.3*maxDist:
                 break
         else:
-            cv2.polylines(image_with_approx, [approx], True, (255, 0, 0), 2)
-            markers.append(marker.Marker(
-                [[int(coord) for coord in column[0]]
-                 for column in approx]))
+            new_marker = marker.Marker(image_hsv,
+                                       [[int(coord) for coord in column[0]]
+                                        for column in approx])
+            if new_marker.is_valid:
+                markers.append(new_marker)
 
     gui.show(image_with_approx, "camera_border_approx")
     return markers
