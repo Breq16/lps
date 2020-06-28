@@ -28,9 +28,8 @@ class Marker:
         self.pic_to_scene, self.scene_to_pic = transform.get_matrices(
             self.corners, 4)
 
-    def scan_square(self, image_lab, pos):
-        """Identify the color of a square at the given position relative to the
-        origin of the marker."""
+    def scan_square(self, image_hsv, pos):
+        """Return the value (lightness) of a square."""
 
         boundary_points = (
             (pos[0], pos[1]),
@@ -39,7 +38,7 @@ class Marker:
             (pos[0], pos[1]-1)
         )
 
-        coord_mask = np.zeros((image_lab.shape[0], image_lab.shape[1], 1),
+        coord_mask = np.zeros((image_hsv.shape[0], image_hsv.shape[1], 1),
                               np.uint8)
 
         picture_points = np.array(tuple(self.pic_pos(point)
@@ -47,8 +46,8 @@ class Marker:
 
         cv2.fillPoly(coord_mask, [picture_points], 255)
 
-        mean_color = cv2.mean(image_lab, coord_mask)
-        return match_color(mean_color)
+        mean_color = cv2.mean(image_hsv, coord_mask)
+        return mean_color[2]
 
     def scan(self, image_hsv):
         "Scan the Marker's squares to determine its orientation and type."
@@ -70,8 +69,17 @@ class Marker:
 
         square_positions = ((1, 1), (0, 1), (0, 0), (1, 0))
 
-        self.squares = list(self.scan_square(image_hsv, pos)
-                            for pos in square_positions)
+        self.square_values = list(self.scan_square(image_hsv, pos)
+                                  for pos in square_positions)
+
+        # Find the threshold!!
+        min_square = min(self.square_values)
+        max_square = max(self.square_values)
+        threshold = (min_square + max_square) / 2
+
+        self.squares = []
+        for value in self.square_values:
+            self.squares.append(value < threshold)
 
         # Use the information gathered from the squares to interpret the type
         # of this marker
