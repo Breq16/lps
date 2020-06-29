@@ -120,3 +120,8 @@ def render():
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0, 0), 3)
 
     return image
+
+
+def dump():
+    global targets, labels
+    return {"targets": targets, "labels": labels}

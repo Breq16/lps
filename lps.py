@@ -19,8 +19,6 @@ while True:
     _, image = cap.read()
     plot.clear()
 
-    state = []
-
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     gui.show(image_rgb, "camera_rgb")
 
@@ -41,12 +39,6 @@ while True:
         marker.display(image_marker_view)
         plot.plot(marker)
         smooth.register(marker)
-        state.append({
-            "type": marker.type,
-            "pos": marker.global_pos((0, 0)),
-            "front": marker.global_pos((0, 4)),
-            "num": marker.num
-        })
 
     gui.show(image_marker_view, "camera_all_markers")
     gui.show(plot.plot_img, "overhead_plot")
@@ -88,7 +80,7 @@ while True:
 
     gui.update()
 
-    server.send_json(state)
+    server.send_json(smooth.dump())
 
     if not gui.running:
         break

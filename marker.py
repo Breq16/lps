@@ -75,6 +75,11 @@ class Marker:
         # Find the threshold!!
         min_square = min(self.square_values)
         max_square = max(self.square_values)
+
+        if max_square - min_square < 20:
+            self.is_valid = False
+            return
+
         threshold = (min_square + max_square) / 2
 
         self.squares = []
@@ -89,7 +94,7 @@ class Marker:
             first_corner_index = self.squares.index(1)
         elif self.squares.count(1) == 2:
             self.type = "label"
-            if self.squares[0] == "red" and self.squares[3] == "red":
+            if self.squares[0] and self.squares[3]:
                 first_corner_index = 3
             else:
                 first_corner_index = self.squares.index(1)
@@ -115,15 +120,15 @@ class Marker:
         more_squares = (self.type == "label")
         row = 0
 
-        self.aux_squares = []
+        aux_squares = []
 
         while more_squares:
             aux_square_positions = tuple((-1+col, -2-row) for col in range(4))
 
-            row_squares = list(self.scan_square(image_hsv, pos)
+            row_squares = list(self.scan_square(image_hsv, pos) < threshold
                                for pos in aux_square_positions)
 
-            self.aux_squares.append(row_squares)
+            aux_squares.append(row_squares)
             more_squares = (row_squares[0] == 0)
 
             row += 1
@@ -131,17 +136,20 @@ class Marker:
                 break
 
         aux_data = []
-        for aux_row in self.aux_squares:
+        for aux_row in aux_squares:
             for aux_square in aux_row[1:]:
-                aux_data.append(aux_square == 1)
+                aux_data.append(aux_square)
 
-        if len(self.aux_squares) == 0:
+        if len(aux_squares) > 0:
+            print(aux_squares)
+
+        if len(aux_squares) == 0:
             self.num = -1
-        elif len(self.aux_squares) == 1:
+        elif len(aux_squares) == 1:
             self.num = 0
-        elif len(self.aux_squares) == 2:
+        elif len(aux_squares) == 2:
             self.num = 8
-        elif len(self.aux_squares) == 3:
+        elif len(aux_squares) == 3:
             self.num = 40
         else:
             self.num = 552
