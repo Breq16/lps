@@ -28,14 +28,14 @@ class Marker:
         self.pic_to_scene, self.scene_to_pic = transform.get_matrices(
             self.corners, 4)
 
-    def scan_square(self, image_hsv, pos):
+    def scan_square(self, image_hsv, pos, inset=0.3):
         """Return the value (lightness) of a square."""
 
         boundary_points = (
-            (pos[0], pos[1]),
-            (pos[0]-1, pos[1]),
-            (pos[0]-1, pos[1]-1),
-            (pos[0], pos[1]-1)
+            (pos[0]-inset, pos[1]-inset),
+            (pos[0]-1+inset, pos[1]-inset),
+            (pos[0]-1+inset, pos[1]-1+inset),
+            (pos[0]-inset, pos[1]-1+inset)
         )
 
         coord_mask = np.zeros((image_hsv.shape[0], image_hsv.shape[1], 1),
@@ -114,7 +114,11 @@ class Marker:
                         + self.squares[:first_corner_index])
 
         # Now that we have the orientation, recalculate the transform matrices
-        self.calc_transform()
+        try:
+            self.calc_transform()
+        except np.linalg.LinAlgError:
+            self.is_valid = False
+            return
 
         # Read any auxillary squares present
         more_squares = (self.type == "label")
@@ -139,9 +143,6 @@ class Marker:
         for aux_row in aux_squares:
             for aux_square in aux_row[1:]:
                 aux_data.append(aux_square)
-
-        if len(aux_squares) > 0:
-            print(aux_squares)
 
         if len(aux_squares) == 0:
             self.num = -1
