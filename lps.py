@@ -46,31 +46,27 @@ while True:
         reference.display(image_ref_transform)
     gui.show(image_ref_transform, "camera_ref_transform")
 
-    image_ref_sq_zero = image_rgb.copy()
-    mask_ref_sq_zero = np.zeros((image_rgb.shape[0], image_rgb.shape[1], 1),
-                                np.uint8)
-    if reference is not None:
-        boundary_points = ((1, 1), (0, 1), (0, 0), (1, 0))
-        picture_points = np.array(tuple(reference.pic_pos(point)
-                                        for point in boundary_points), np.intc)
-        cv2.polylines(image_ref_sq_zero, [picture_points],
-                      True, (255, 255, 0), 2)
-        cv2.fillPoly(mask_ref_sq_zero, [picture_points], 255)
-
-    gui.show(image_ref_sq_zero, "camera_sq0")
-    gui.show(cv2.bitwise_and(image_rgb, image_rgb, mask=mask_ref_sq_zero),
-             "camera_mask_sq0")
-
     image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    image_gray_sq0 = cv2.bitwise_and(image_gray, image_gray,
-                                     mask=mask_ref_sq_zero)
+    image_squares = cv2.cvtColor(image_gray, cv2.COLOR_GRAY2RGB)
 
     if reference is not None:
-        cv2.rectangle(image_gray_sq0, (10, 200), (60, 250), reference.min, -1)
-        cv2.rectangle(image_gray_sq0, (80, 200), (130, 250), reference.max, -1)
-        cv2.putText(image_gray_sq0, str(reference.squares[0]), (10, 100),
+        for row in range(2):
+            for col in range(2):
+                boundary_points = ((col, row), (col-1, row),
+                                   (col-1, row-1), (col, row-1))
+                picture_points = np.array(tuple(reference.pic_pos(point)
+                                                for point in boundary_points),
+                                          np.intc)
+                cv2.polylines(image_squares, [picture_points],
+                              True, (255, 255, 0), 2)
+
+        cv2.rectangle(image_squares, (10, 200), (60, 250),
+                      3*(reference.min,), -1)
+        cv2.rectangle(image_squares, (80, 200), (130, 250),
+                      3*(reference.max,), -1)
+        cv2.putText(image_squares, str(reference.squares), (10, 100),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0, 0), 3)
-    gui.show(image_gray_sq0, "camera_gray_sq0")
+    gui.show(image_squares, "reference_squares")
 
     smooth.prune()
     gui.show(smooth.render(), "smooth_plot")

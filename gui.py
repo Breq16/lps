@@ -11,9 +11,7 @@ feeds = [
     "camera_border_contours",
     "camera_border_approx",
     "camera_ref_transform",
-    "camera_sq0",
-    "camera_mask_sq0",
-    "camera_gray_sq0",
+    "reference_squares",
     "camera_all_markers",
     "overhead_plot",
     "smooth_plot"
