@@ -75,6 +75,8 @@ class Marker:
         min_square = min(self.square_values)
         max_square = max(self.square_values)
 
+        self.min, self.max = min_square, max_square
+
         if max_square - min_square < 20:
             self.is_valid = False
             return

@@ -61,17 +61,16 @@ while True:
     gui.show(cv2.bitwise_and(image_rgb, image_rgb, mask=mask_ref_sq_zero),
              "camera_mask_sq0")
 
-    image_lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-    image_lab_sq0 = cv2.bitwise_and(image_lab, image_lab,
-                                    mask=mask_ref_sq_zero)
-
-    cv2.rectangle(image_lab_sq0, (10, 200), (60, 250), (182, 76, 196), -1)
-    cv2.rectangle(image_lab_sq0, (80, 200), (130, 250), (164, 187, 151), -1)
+    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    image_gray_sq0 = cv2.bitwise_and(image_gray, image_gray,
+                                     mask=mask_ref_sq_zero)
 
     if reference is not None:
-        cv2.putText(image_lab_sq0, str(reference.squares[0]), (10, 100),
+        cv2.rectangle(image_gray_sq0, (10, 200), (60, 250), reference.min, -1)
+        cv2.rectangle(image_gray_sq0, (80, 200), (130, 250), reference.max, -1)
+        cv2.putText(image_gray_sq0, str(reference.squares[0]), (10, 100),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0, 0), 3)
-    gui.show(image_lab_sq0, "camera_lab_sq0")
+    gui.show(image_gray_sq0, "camera_gray_sq0")
 
     smooth.prune()
     gui.show(smooth.render(), "smooth_plot")

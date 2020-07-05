@@ -13,7 +13,7 @@ feeds = [
     "camera_ref_transform",
     "camera_sq0",
     "camera_mask_sq0",
-    "camera_lab_sq0",
+    "camera_gray_sq0",
     "camera_all_markers",
     "overhead_plot",
     "smooth_plot"
