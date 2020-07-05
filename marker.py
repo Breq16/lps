@@ -121,43 +121,18 @@ class Marker:
             return
 
         # Read any auxillary squares present
-        more_squares = (self.type == "label")
-        row = 0
-
-        aux_squares = []
-
-        while more_squares:
-            aux_square_positions = tuple((-1+col, -2-row) for col in range(4))
-
-            row_squares = list(self.scan_square(image_hsv, pos) < threshold
+        if self.type == "label":
+            aux_square_positions = tuple((-1+col, -2) for col in range(4))
+            aux_squares = list(self.scan_square(image_hsv, pos) < threshold
                                for pos in aux_square_positions)
 
-            aux_squares.append(row_squares)
-            more_squares = (row_squares[0] == 0)
-
-            row += 1
-            if row >= 4:  # sanity check
-                break
-
-        aux_data = []
-        for aux_row in aux_squares:
-            for aux_square in aux_row[1:]:
-                aux_data.append(aux_square)
-
-        if len(aux_squares) == 0:
-            self.num = -1
-        elif len(aux_squares) == 1:
             self.num = 0
-        elif len(aux_squares) == 2:
-            self.num = 8
-        elif len(aux_squares) == 3:
-            self.num = 40
-        else:
-            self.num = 552
 
-        for i, bit in enumerate(aux_data):
-            if bit:
-                self.num += 2**i
+            for i, bit in enumerate(aux_squares):
+                if bit:
+                    self.num += 2**i
+        else:
+            self.num = -1
 
         self.is_valid = True
 
