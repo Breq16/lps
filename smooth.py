@@ -1,5 +1,6 @@
 import time
 import string
+import math
 
 import scipy.spatial.distance
 import numpy as np
@@ -16,8 +17,10 @@ label_timestamps = {}
 def smooth_pos(old_pos, new_pos):
     OLD_F = 0.9
     NEW_F = 1 - OLD_F
-    return ((OLD_F*old_pos[0] + NEW_F*new_pos[0]),
-            (OLD_F*old_pos[1] + NEW_F*new_pos[1]))
+    return (((OLD_F*old_pos[0][0] + NEW_F*new_pos[0][0]),
+             (OLD_F*old_pos[0][1] + NEW_F*new_pos[0][1])),
+            ((OLD_F*old_pos[1][0] + NEW_F*new_pos[1][0]),
+             (OLD_F*old_pos[1][1] + NEW_F*new_pos[1][1])))
 
 
 def target_letter():
@@ -48,25 +51,29 @@ def register(marker):
 
         for letter, target in targets.items():
             dist = scipy.spatial.distance.euclidean(marker.global_pos(),
-                                                    target)
+                                                    target[0])
             if dist < smallest_dist:
                 smallest_dist = dist
                 closest_target = letter
 
         if closest_target is None:
             closest_target = target_letter()
-            targets[closest_target] = marker.global_pos()
+            targets[closest_target] = (marker.global_pos(),
+                                       marker.global_pos((0, 2)))
         else:
             targets[closest_target] = smooth_pos(targets[closest_target],
-                                                 marker.global_pos())
+                                                 (marker.global_pos(),
+                                                  marker.global_pos((0, 2))))
         target_timestamps[closest_target] = time.time()
 
     elif marker.type == "label":
         if marker.num in labels:
             labels[marker.num] = smooth_pos(labels[marker.num],
-                                            marker.global_pos())
+                                            (marker.global_pos(),
+                                             marker.global_pos((0, 2))))
         else:
-            labels[marker.num] = marker.global_pos()
+            labels[marker.num] = (marker.global_pos(),
+                                  marker.global_pos((0, 2)))
         label_timestamps[marker.num] = time.time()
 
 
@@ -109,19 +116,35 @@ def render():
 
     for letter, pos in targets.items():
         if pos is not None:
-            cv2.circle(image, coord_to_px(pos), 10, (0, 255, 255))
-            cv2.putText(image, str(letter), coord_to_px(pos),
+            cv2.circle(image, coord_to_px(pos[0]), 10, (0, 255, 255))
+            cv2.putText(image, str(letter), coord_to_px(pos[0]),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0, 0), 3)
+            cv2.arrowedLine(image, coord_to_px(pos[0]), coord_to_px(pos[1]),
+                            (0, 255, 255), 2)
 
     for num, pos in labels.items():
         if pos is not None:
-            cv2.circle(image, coord_to_px(pos), 10, (255, 255, 0))
-            cv2.putText(image, str(num), coord_to_px(pos),
+            cv2.circle(image, coord_to_px(pos[0]), 10, (255, 255, 0))
+            cv2.putText(image, str(num), coord_to_px(pos[0]),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0, 0), 3)
+            cv2.arrowedLine(image, coord_to_px(pos[0]), coord_to_px(pos[1]),
+                            (255, 255, 0), 2)
 
     return image
 
 
 def dump():
     global targets, labels
-    return {"targets": targets, "labels": labels}
+    state = {"targets": {}, "labels": {}}
+
+    for letter, pos in targets.items():
+        center = pos[0]
+        heading = math.atan2(pos[1][1]-pos[0][1], pos[1][0]-pos[0][0])
+        state["targets"][letter] = {"center": center, "heading": heading}
+
+    for number, pos in labels.items():
+        center = pos[0]
+        heading = math.atan2(pos[1][1]-pos[0][1], pos[1][0]-pos[0][0])
+        state["labels"][str(number)] = {"center": center, "heading": heading}
+
+    return state

@@ -26,11 +26,15 @@ def coord_to_pixel(pos):
 def plot(marker):
     global plot_img, marker_colors
     global_pos = marker.global_pos()
-    if global_pos is None:
+    front_pos = marker.global_pos((0, 2))
+    if global_pos is None or front_pos is None:
         return
 
     cv2.circle(plot_img, coord_to_pixel(global_pos),
                10, marker_colors[marker.type], 2)
+
+    cv2.arrowedLine(plot_img, coord_to_pixel(global_pos),
+                    coord_to_pixel(front_pos), marker_colors[marker.type], 2)
 
     if marker.num >= 0:
         cv2.putText(plot_img, str(marker.num), coord_to_pixel(global_pos),
