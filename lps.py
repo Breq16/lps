@@ -25,8 +25,6 @@ while True:
     image_marker_view = image_rgb.copy()
 
     markers = scanner.scan(image)
-    for marker in markers:
-        marker.scan(image)
 
     reference = None
     for marker in markers:

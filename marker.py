@@ -28,7 +28,7 @@ class Marker:
         self.pic_to_scene, self.scene_to_pic = transform.get_matrices(
             self.corners, 4)
 
-    def scan_square(self, image_hsv, pos, inset=0.3):
+    def scan_square(self, image_gray, pos, inset=0.3):
         """Return the value (lightness) of a square."""
 
         boundary_points = (
@@ -38,18 +38,17 @@ class Marker:
             (pos[0]-inset, pos[1]-1+inset)
         )
 
-        coord_mask = np.zeros((image_hsv.shape[0], image_hsv.shape[1], 1),
-                              np.uint8)
+        coord_mask = np.zeros(image_gray.shape, np.uint8)
 
         picture_points = np.array(tuple(self.pic_pos(point)
                                         for point in boundary_points), np.intc)
 
         cv2.fillPoly(coord_mask, [picture_points], 255)
 
-        mean_color = cv2.mean(image_hsv, coord_mask)
-        return mean_color[2]
+        mean_color = cv2.mean(image_gray, coord_mask)
+        return mean_color[0]
 
-    def scan(self, image_hsv):
+    def scan(self, image_gray):
         "Scan the Marker's squares to determine its orientation and type."
         try:
             self.calc_transform()
@@ -69,7 +68,7 @@ class Marker:
 
         square_positions = ((1, 1), (0, 1), (0, 0), (1, 0))
 
-        self.square_values = list(self.scan_square(image_hsv, pos)
+        self.square_values = list(self.scan_square(image_gray, pos)
                                   for pos in square_positions)
 
         # Find the threshold!!
@@ -123,7 +122,7 @@ class Marker:
         # Read any auxillary squares present
         if self.type == "label":
             aux_square_positions = tuple((-1+col, -2) for col in range(4))
-            aux_squares = list(self.scan_square(image_hsv, pos) < threshold
+            aux_squares = list(self.scan_square(image_gray, pos) < threshold
                                for pos in aux_square_positions)
 
             self.num = 0

@@ -17,6 +17,9 @@ def scan(image):
     image_hsv = cv2.cvtColor(image_blur, cv2.COLOR_BGR2HSV)
     gui.show(image_hsv, "camera_hsv")
 
+    image_gray = cv2.cvtColor(image_blur, cv2.COLOR_BGR2GRAY)
+    gui.show(image_gray, "camera_gray")
+
     mask = cv2.inRange(image_hsv, BLUE_MIN, BLUE_MAX)
     gui.show(mask, "mask_border")
 
@@ -70,7 +73,7 @@ def scan(image):
             if dist < 0.3*maxDist:
                 break
         else:
-            new_marker = marker.Marker(image_hsv,
+            new_marker = marker.Marker(image_gray,
                                        [[int(coord) for coord in column[0]]
                                         for column in approx])
             if new_marker.is_valid:
