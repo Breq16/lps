@@ -1,6 +1,7 @@
 import socket
 import select
 import json
+import math
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 clients = []
@@ -37,3 +38,22 @@ def broadcast_data(data):
 def send_json(data):
     data = json.dumps(data).encode("utf-8")+b"\n"
     broadcast_data(data)
+
+
+def send_labels(state):
+    # Easy-to-parse format for microcontrollers
+    # Returns results for labels 0, 1, 2, and 3
+    bytearr = bytearray()
+    for i in range(4):
+        labelbytes = bytearray(4)
+        if str(i) in state["labels"]:
+            label = state["labels"][str(i)]
+
+            labelbytes[0] = label["center"][0]  # Byte 0: X position
+            labelbytes[1] = label["center"][1]  # Byte 1: Y position
+
+            headingint = int(label["heading"] / (2*math.pi) * (256**2))
+            labelbytes[2] = headingint // 256  # Byte 2: MSByte of heading
+            labelbytes[3] = headingint % 256   # Byte 3: LSByte of heading
+        bytearr += labelbytes
+    broadcast_data(bytes(bytearr))
