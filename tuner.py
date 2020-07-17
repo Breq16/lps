@@ -1,3 +1,4 @@
+import sys
 import tkinter as tk
 from PIL import Image, ImageTk
 
@@ -48,7 +49,7 @@ hueSel.grid(row=1, column=0, columnspan=2)
 satSel.grid(row=1, column=2, columnspan=2)
 valSel.grid(row=1, column=4, columnspan=2)
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(int(sys.argv[1]))
 cap.set(cv2.CAP_PROP_FPS, 15)
 
 while True:

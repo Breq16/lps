@@ -2,6 +2,7 @@ import tkinter as tk
 from PIL import Image, ImageTk
 
 running = True
+paused = False
 
 feeds = [
     "camera_rgb",
@@ -36,13 +37,16 @@ def init():
 
     leftNextButton = tk.Button(root, text="Next", command=nextfeedleft)
     rightNextButton = tk.Button(root, text="Next", command=nextfeedleft)
+
     quitButton = tk.Button(root, text="Quit", command=quit_callback)
+    pauseButton = tk.Button(root, text="Pause", command=pause_callback)
 
     leftFeedImage.grid(row=0, column=0, columnspan=3)
     rightFeedImage.grid(row=0, column=3, columnspan=3)
     leftFeedMenu.grid(row=1, column=0)
     leftNextButton.grid(row=1, column=1)
-    quitButton.grid(row=1, column=2, columnspan=2)
+    quitButton.grid(row=1, column=2)
+    pauseButton.grid(row=1, column=3)
     rightFeedMenu.grid(row=1, column=4)
     rightNextButton.grid(row=1, column=5)
 
@@ -69,6 +73,11 @@ def show(np_img, name):
 def quit_callback():
     global running
     running = False
+
+
+def pause_callback():
+    global paused
+    paused = not paused
 
 
 def nextfeedleft():

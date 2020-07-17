@@ -1,3 +1,5 @@
+import sys
+
 import cv2
 import numpy as np
 
@@ -7,14 +9,16 @@ import gui
 import server
 import smooth
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(int(sys.argv[1]))
 cap.set(cv2.CAP_PROP_FPS, 15)
 
 gui.init()
 server.start()
 
 while True:
-    server.accept_clients()
+    gui.update()
+    if gui.paused:
+        continue
 
     _, image = cap.read()
     plot.clear()
@@ -71,9 +75,9 @@ while True:
     smooth.prune()
     gui.show(smooth.render(), "smooth_plot")
 
-    gui.update()
-
     server.send_json(smooth.dump())
+
+    server.accept_clients()
 
     if not gui.running:
         break
