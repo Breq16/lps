@@ -1,12 +1,13 @@
 import socket
 import json
+import sys
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 MY_NUM = 0
 
 
-def connect(host="localhost", port=5555):
+def connect(host=sys.argv[1], port=5555):
     global sock
     sock.connect((host, port))
 

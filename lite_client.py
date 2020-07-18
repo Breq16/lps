@@ -1,5 +1,7 @@
 import socket
 import math
+import binascii
+import sys
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -7,7 +9,7 @@ MY_NUM = 0
 TARGET_NUM = 1
 
 
-def connect(host="10.0.1.168", port=5556):
+def connect(host=sys.argv[1], port=5556):
     global sock
     sock.connect((host, port))
 
@@ -36,12 +38,14 @@ if __name__ == "__main__":
     try:
         while True:
             state = get_state()
-            print([i for i in state])
+            print(binascii.hexlify(state, " ").decode("utf-8"))
 
             myx, myy, myh = get_label(MY_NUM)
             tax, tay, tah = get_label(TARGET_NUM)
-
             glob_h = math.atan2(tay-myy, tax-myx)
-            print(glob_h)
+
+            print(f"Me: ({myx}, {myy}, {myh} rad)."
+                  f"Target: ({tax}, {tay}, {tah} rad).")
+
     finally:
         close()
