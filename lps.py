@@ -75,9 +75,9 @@ while True:
     smooth.prune()
     gui.show(smooth.render(), "smooth_plot")
 
-    server.send_json(smooth.dump())
+    server.update(smooth.dump())
 
-    server.accept_clients()
+    server.accept()
 
     if not gui.running:
         break
