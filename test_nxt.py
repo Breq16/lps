@@ -9,16 +9,18 @@ joystick.init()
 
 brick = nxt.find_one_brick()
 
-left_motor = nxt.Motor(brick, "B")
-right_motor = nxt.Motor(brick, "C")
+left_motor = nxt.Motor(brick, nxt.PORT_B)
+right_motor = nxt.Motor(brick, nxt.PORT_C)
 
 
-def clamp(val, range):
+def clamp(val, range, deadband):
+    if abs(val) < deadband:
+        return 0
     if val < range[0]:
-        return range[0]
+        return int(range[0])
     if val > range[1]:
-        return range[1]
-    return val
+        return int(range[1])
+    return int(round(val))
 
 
 while True:
@@ -30,8 +32,8 @@ while True:
     left_speed = speed + steer
     right_speed = speed - steer
 
-    left_speed = clamp(left_speed*100, (-100, 100))
-    right_speed = clamp(right_speed*100, (-100, 100))
+    left_speed = clamp(left_speed*100, (-100, 100), 20)
+    right_speed = clamp(right_speed*100, (-100, 100), 20)
 
     left_motor.run(left_speed)
     right_motor.run(right_speed)
