@@ -1,3 +1,4 @@
-from robot import Robot
+import json_client
+import robot
 
-robot = Robot()
+json_client.connect()

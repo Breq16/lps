@@ -3,49 +3,50 @@ import time
 import nxt
 
 
-class Robot:
-    FORWARD_SPEED = 50
-    TURN_SPEED = 50
+FORWARD_SPEED = 50
+TURN_SPEED = 50
 
-    LEFT = -1
-    RIGHT = 1
+LEFT = -1
+RIGHT = 1
 
-    def __init__(self):
-        self.brick = nxt.find_one_brick()
-        self.motors = [nxt.Motor(self.brick, nxt.PORT_B),
-                       nxt.Motor(self.brick, nxt.PORT_C)]
 
-    def stop(self):
-        for motor in self.motors:
-            motor.idle()
+brick = nxt.find_one_brick()
+motors = [nxt.Motor(brick, nxt.PORT_B),
+          nxt.Motor(brick, nxt.PORT_C)]
 
-    def forward(self, secs=0.2):
-        for motor in self.motors:
-            motor.run(self.FORWARD_SPEED, regulated=True)
 
-        if secs:
-            time.sleep(secs)
-            self.stop()
+def stop():
+    for motor in motors:
+        motor.idle()
 
-    def turn(self, direction, secs=0.2):
-        self.motors[0].run(-direction*self.TURN_SPEED, regulated=True)
-        self.motors[1].run(direction*self.TURN_SPEED, regulated=True)
 
-        if secs:
-            time.sleep(secs)
-            self.stop()
+def forward(secs=0.2):
+    for motor in motors:
+        motor.run(FORWARD_SPEED, regulated=True)
+
+    if secs:
+        time.sleep(secs)
+        stop()
+
+
+def turn(direction, secs=0.2):
+    motors[0].run(-direction*TURN_SPEED, regulated=True)
+    motors[1].run(direction*TURN_SPEED, regulated=True)
+
+    if secs:
+        time.sleep(secs)
+        stop()
 
 
 if __name__ == "__main__":
-    r = Robot()
     i = ""
     while i != "q":
         i = input()
         if i == "w":
-            r.forward()
+            forward()
         elif i == "s":
-            r.stop()
+            stop()
         elif i == "a":
-            r.turn(Robot.LEFT)
+            turn(LEFT)
         elif i == "d":
-            r.turn(Robot.RIGHT)
+            turn(RIGHT)
