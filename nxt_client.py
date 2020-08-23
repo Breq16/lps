@@ -1,4 +1,3 @@
-import nxt
-import nxt.locator
+from robot import Robot
 
-b = nxt.locator.find_one_brick()
+robot = Robot()
