@@ -17,9 +17,9 @@ class Robot:
 
     def stop(self):
         for motor in self.motors:
-            motor.brake()
+            motor.idle()
 
-    def forward(self, secs=None):
+    def forward(self, secs=0.2):
         for motor in self.motors:
             motor.run(self.FORWARD_SPEED, regulated=True)
 
@@ -27,9 +27,9 @@ class Robot:
             time.sleep(secs)
             self.stop()
 
-    def turn(self, direction, secs=None):
-        self.motors[0].run(direction*self.TURN_SPEED, regulated=True)
-        self.motors[1].run(-direction*self.TURN_SPEED, regulated=True)
+    def turn(self, direction, secs=0.2):
+        self.motors[0].run(-direction*self.TURN_SPEED, regulated=True)
+        self.motors[1].run(direction*self.TURN_SPEED, regulated=True)
 
         if secs:
             time.sleep(secs)
