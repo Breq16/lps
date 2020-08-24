@@ -121,6 +121,12 @@ class Marker:
             self.is_valid = False
             return
 
+        # Make sure no part of the image is at infinity
+        for value in self.pic_pos():
+            if abs(value) >= 2**63:
+                self.is_valid = False
+                return
+
         # Read any auxillary squares present
         if self.type == "label":
             aux_square_positions = tuple((-1+col, -2) for col in range(4))

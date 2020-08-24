@@ -50,8 +50,6 @@ def scan(image):
         epsilon = 0.05*length
         approx = cv2.approxPolyDP(contour, epsilon, True)
 
-        cv2.polylines(image_with_approx, [approx], True, (255, 0, 0), 2)
-
         if len(approx) != 4:
             continue
 
@@ -78,6 +76,8 @@ def scan(image):
                                         for column in approx])
             if new_marker.is_valid:
                 markers.append(new_marker)
+                cv2.polylines(image_with_approx, [approx],
+                              True, (255, 0, 0), 2)
 
     gui.show(image_with_approx, "camera_border_approx")
     return markers

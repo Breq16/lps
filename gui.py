@@ -1,5 +1,8 @@
+import time
 import tkinter as tk
+
 from PIL import Image, ImageTk
+import cv2
 
 running = True
 paused = False
@@ -17,6 +20,8 @@ feeds = [
     "overhead_plot",
     "smooth_plot"
 ]
+
+currentImg = None
 
 
 def init():
@@ -38,14 +43,14 @@ def init():
     leftNextButton = tk.Button(root, text="Next", command=nextfeedleft)
     rightNextButton = tk.Button(root, text="Next", command=nextfeedleft)
 
-    quitButton = tk.Button(root, text="Quit", command=quit_callback)
+    saveButton = tk.Button(root, text="Save", command=save_callback)
     pauseButton = tk.Button(root, text="Pause", command=pause_callback)
 
     leftFeedImage.grid(row=0, column=0, columnspan=3)
     rightFeedImage.grid(row=0, column=3, columnspan=3)
     leftFeedMenu.grid(row=1, column=0)
     leftNextButton.grid(row=1, column=1)
-    quitButton.grid(row=1, column=2)
+    saveButton.grid(row=1, column=2)
     pauseButton.grid(row=1, column=3)
     rightFeedMenu.grid(row=1, column=4)
     rightNextButton.grid(row=1, column=5)
@@ -57,12 +62,15 @@ def update():
 
 
 def show(np_img, name):
-    global leftFeedName, rightFeedName, leftFeedImage, rightFeedImage
+    global leftFeedName, rightFeedName, leftFeedImage, rightFeedImage, \
+        currentImg
     if name == leftFeedName.get():
         pil_img = Image.fromarray(np_img)
         tk_img = ImageTk.PhotoImage(image=pil_img)
         leftFeedImage.imgtk = tk_img
         leftFeedImage.configure(image=tk_img)
+
+        currentImg = np_img
     if name == rightFeedName.get():
         pil_img = Image.fromarray(np_img)
         tk_img = ImageTk.PhotoImage(image=pil_img)
@@ -70,9 +78,12 @@ def show(np_img, name):
         rightFeedImage.configure(image=tk_img)
 
 
-def quit_callback():
-    global running
-    running = False
+def save_callback():
+    global currentImg
+    timestamp = int(time.time())
+    currentImgRgb = cv2.cvtColor(currentImg, cv2.COLOR_BGR2RGB)
+    cv2.imwrite(f"screenshots/lps-screenshot-{timestamp}.png",
+                currentImgRgb)
 
 
 def pause_callback():
