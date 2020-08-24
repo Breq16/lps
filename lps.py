@@ -6,7 +6,6 @@ import numpy as np
 import scanner
 import plot
 import gui
-import server
 import smooth
 import webserver
 
@@ -14,7 +13,6 @@ cap = cv2.VideoCapture(int(sys.argv[1]))
 cap.set(cv2.CAP_PROP_FPS, 15)
 
 gui.init()
-server.start()
 
 while True:
     gui.update()
@@ -76,13 +74,9 @@ while True:
     smooth.prune()
     gui.show(smooth.render(), "smooth_plot")
 
-    server.update(smooth.dump())
     webserver.update(smooth.dump())
-
-    server.accept()
 
     if not gui.running:
         break
 
 cap.release()
-server.close()
