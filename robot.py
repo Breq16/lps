@@ -3,8 +3,8 @@ import time
 import nxt
 
 
-FORWARD_SPEED = 50
-TURN_SPEED = 50
+FORWARD_SPEED = 25
+TURN_SPEED = 25
 
 LEFT = -1
 RIGHT = 1
@@ -15,9 +15,11 @@ motors = [nxt.Motor(brick, nxt.PORT_B),
           nxt.Motor(brick, nxt.PORT_C)]
 
 
-def stop():
+def stop(secs=0.2):
     for motor in motors:
         motor.idle()
+    if secs:
+        time.sleep(secs)
 
 
 def forward(secs=0.2):
@@ -26,7 +28,7 @@ def forward(secs=0.2):
 
     if secs:
         time.sleep(secs)
-        stop()
+        stop(0)
 
 
 def turn(direction, secs=0.2):
@@ -35,6 +37,17 @@ def turn(direction, secs=0.2):
 
     if secs:
         time.sleep(secs)
+        stop(0)
+
+
+def action(word):
+    if word == "forward":
+        forward()
+    elif word == "left":
+        turn(LEFT)
+    elif word == "right":
+        turn(RIGHT)
+    elif word == "stop":
         stop()
 
 
