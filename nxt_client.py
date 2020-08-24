@@ -1,6 +1,9 @@
 import math
 import time
 
+import numpy as np
+import cv2
+
 import web_client
 import robot
 
@@ -13,6 +16,36 @@ class Bounds:
     MIN_DISTANCE = 7
     MAX_ANGLE = math.pi / 3
     MIN_ANGLE = math.pi / 6
+
+
+cv2.startWindowThread()
+
+
+def render_state(offset, global_angle, heading, relative_angle):
+    image = np.zeros((500, 500, 3), np.uint8)
+
+    def coord_to_px(pos=(0, 0)):
+        x = image.shape[1]/2 + pos[0]*20 + 10
+        y = image.shape[1]/2 - pos[1]*20 - 10
+        return (int(round(x)), int(round(y)))
+
+    cv2.arrowedLine(image, coord_to_px(), coord_to_px(offset),
+                    (255, 0, 0), 2)
+
+    def showAngle(angle, name="", color=(255, 255, 255)):
+        endpoint = (10*math.cos(angle), 10*math.sin(angle))
+        cv2.arrowedLine(image, coord_to_px(),
+                        coord_to_px(endpoint),
+                        color, 2)
+        cv2.putText(image, name, coord_to_px(endpoint),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, color + (0,), 3)
+
+    showAngle(global_angle, "Global", (0, 0, 255))
+    showAngle(heading, "Heading", (0, 255, 0))
+    showAngle(relative_angle, "Relative", (255, 0, 0))
+
+    cv2.imshow("state", image)
+    # cv2.waitKey(0)
 
 
 def next_action(my_pose, target_pose, prev_action):
@@ -33,6 +66,8 @@ def next_action(my_pose, target_pose, prev_action):
 
     print(f"Offset: {offset[0]}, {offset[1]}")
     print(f"Dist: {distance}, Heading: {relative_angle}")
+
+    render_state(offset, global_angle, my_pose["heading"], relative_angle)
 
     if prev_action == "forward":
         if distance < Bounds.MIN_DISTANCE:
@@ -66,9 +101,9 @@ def next_action(my_pose, target_pose, prev_action):
         if abs(relative_angle) > Bounds.MIN_ANGLE:
             # We need to keep turning
             if relative_angle > 0:
-                return "right"
-            else:
                 return "left"
+            else:
+                return "right"
         else:
             # We can stop turning now
             if distance > Bounds.MAX_DISTANCE:
