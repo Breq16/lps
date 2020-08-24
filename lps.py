@@ -8,6 +8,7 @@ import plot
 import gui
 import server
 import smooth
+import webserver
 
 cap = cv2.VideoCapture(int(sys.argv[1]))
 cap.set(cv2.CAP_PROP_FPS, 15)
@@ -76,6 +77,7 @@ while True:
     gui.show(smooth.render(), "smooth_plot")
 
     server.update(smooth.dump())
+    webserver.update(smooth.dump())
 
     server.accept()
 

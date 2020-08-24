@@ -3,8 +3,8 @@ import time
 import nxt
 
 
-FORWARD_SPEED = 25
-TURN_SPEED = 25
+FORWARD_SPEED = 50
+TURN_SPEED = 50
 
 LEFT = -1
 RIGHT = 1

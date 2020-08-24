@@ -1,9 +1,8 @@
 import math
+import time
 
-import json_client
+import web_client
 import robot
-
-json_client.connect()
 
 MY_NUM = "0"
 TARGET_NUM = "1"
@@ -25,6 +24,11 @@ def next_action(my_pose, target_pose, prev_action):
     global_angle = math.atan2(offset[1], offset[0])
     relative_angle = global_angle - my_pose["heading"]
 
+    if relative_angle > math.pi:
+        relative_angle -= 2*math.pi
+    if relative_angle < -math.pi:
+        relative_angle += 2*math.pi
+
     distance = math.sqrt(offset[0]**2 + offset[1]**2)
 
     print(f"Offset: {offset[0]}, {offset[1]}")
@@ -39,9 +43,9 @@ def next_action(my_pose, target_pose, prev_action):
             if abs(relative_angle) > Bounds.MAX_ANGLE:
                 # Turn, we are pointed the wrong way
                 if relative_angle > 0:
-                    return "right"
-                else:
                     return "left"
+                else:
+                    return "right"
             else:
                 return "forward"
     elif prev_action == "stop":
@@ -53,9 +57,9 @@ def next_action(my_pose, target_pose, prev_action):
             if abs(relative_angle) > Bounds.MAX_ANGLE:
                 # Turn, we are pointed the wrong way
                 if relative_angle > 0:
-                    return "right"
-                else:
                     return "left"
+                else:
+                    return "right"
             else:
                 return "forward"
     elif prev_action in ("left", "right"):
@@ -78,7 +82,7 @@ def next_action(my_pose, target_pose, prev_action):
 action = "stop"
 
 while True:
-    state = json_client.get_state()
+    state = web_client.get_state()
 
     if MY_NUM not in state["labels"] or TARGET_NUM not in state["labels"]:
         continue
@@ -91,5 +95,4 @@ while True:
     print(action)
 
     robot.action(action)
-
-    input()
+    time.sleep(0.2)
