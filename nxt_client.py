@@ -4,6 +4,8 @@ import time
 import client
 import robot
 
+print("Connected!")
+
 MY_NUM = "0"
 TARGET_NUM = "1"
 

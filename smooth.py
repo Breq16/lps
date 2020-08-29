@@ -15,7 +15,7 @@ label_timestamps = {}
 
 
 def smooth_pos(old_pos, new_pos):
-    OLD_F = 0.9
+    OLD_F = 0.5
     NEW_F = 1 - OLD_F
     return (((OLD_F*old_pos[0][0] + NEW_F*new_pos[0][0]),
              (OLD_F*old_pos[0][1] + NEW_F*new_pos[0][1])),

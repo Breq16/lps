@@ -6,7 +6,7 @@ import imutils
 import marker
 import gui
 
-BLUE_MIN = np.array([90, 40, 150])
+BLUE_MIN = np.array([90, 60, 80])
 BLUE_MAX = np.array([120, 255, 255])
 
 
